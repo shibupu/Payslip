@@ -1,0 +1,115 @@
+#!/usr/bin/perl
+
+use lib "./lib";
+use strict;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use Conf;
+use Database;
+
+require "common.pl";
+
+my $q    = new CGI;
+my $db   = new Database;
+my $conf = new Conf;
+
+my $action = $q->param('action');
+my $id     = $q->param('id');
+
+if ($action && $id) {
+    eval "$action()" if $action ne 'back';
+    print $q->redirect('employees');
+    exit;
+}
+
+print $q->header;
+
+template('header');
+add_edit() if $id;
+template('footer');
+
+sub add_edit {
+    my $param;
+    my ($salary_entered) = $db->{dbh}->selectrow_array(qq{
+        SELECT
+            COUNT(*)
+        FROM
+            salary
+        WHERE
+            emp_id = ?
+    }, undef, $id);
+
+    if ($salary_entered) {
+        $param = $db->{dbh}->selectrow_hashref(qq{
+            SELECT
+                *
+            FROM
+                salary
+            WHERE
+                emp_id = ?
+        }, undef, $id);
+
+        $param->{button} = 'Update';
+        $param->{action} = 'update';
+    }
+    else {
+        $param->{button} = 'Add';
+        $param->{action} = 'insert';
+    }
+
+    $param->{id} = $id;
+    template('salary', $param);
+}
+
+sub insert {
+    my $params = $q->Vars;
+    my $data = {
+        emp_id                    => $id,
+        basic                     => $params->{basic},
+        hra                       => $params->{hra},
+        gratuity                  => $params->{gratuity},
+        bonus                     => $params->{bonus},
+        retention_bonus           => $params->{retention_bonus},
+        dearness_allowance        => $params->{dearness_allowance},
+        transport_allowance       => $params->{transport_allowance},
+        leave_travel_allowance    => $params->{leave_travel_allowance},
+        special_allowance         => $params->{special_allowance},
+        other_allowance           => $params->{other_allowance},
+        food_coupons              => $params->{food_coupons},
+        medical_reimbursement     => $params->{medical_reimbursement},
+        car_expense_reimbursement => $params->{car_expense_reimbursement},
+        tel_expense_reimbursement => $params->{tel_expense_reimbursement},
+        pf                        => $params->{pf},
+        tds                       => $params->{tds},
+        professional_tax          => $params->{professional_tax},
+    };
+
+    my $rows = $db->insert('salary', $data);
+}
+
+sub update {
+    my $params = $q->Vars;
+    my $data = {
+        basic                     => $params->{basic},
+        hra                       => $params->{hra},
+        gratuity                  => $params->{gratuity},
+        bonus                     => $params->{bonus},
+        retention_bonus           => $params->{retention_bonus},
+        dearness_allowance        => $params->{dearness_allowance},
+        transport_allowance       => $params->{transport_allowance},
+        leave_travel_allowance    => $params->{leave_travel_allowance},
+        special_allowance         => $params->{special_allowance},
+        other_allowance           => $params->{other_allowance},
+        food_coupons              => $params->{food_coupons},
+        medical_reimbursement     => $params->{medical_reimbursement},
+        car_expense_reimbursement => $params->{car_expense_reimbursement},
+        tel_expense_reimbursement => $params->{tel_expense_reimbursement},
+        pf                        => $params->{pf},
+        tds                       => $params->{tds},
+        professional_tax          => $params->{professional_tax},
+    };
+    my $cond = { emp_id => $id };
+
+    my $rows = $db->update('salary', $data, $cond);
+}

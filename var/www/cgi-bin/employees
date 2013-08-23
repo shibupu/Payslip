@@ -1,0 +1,163 @@
+#!/usr/bin/perl
+
+use lib "./lib";
+use strict;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use Conf;
+use Database;
+
+require "common.pl";
+
+my $q    = new CGI;
+my $db   = new Database;
+my $conf = new Conf;
+
+my $action = $q->param('action');
+my $id     = $q->param('id');
+
+if ($action eq 'insert') {
+    my ($emp_id) = insert();
+    print $q->redirect("salary?id=$emp_id");
+    exit;
+}
+
+print $q->header;
+
+template('header');
+
+if ($action eq 'add') {
+    add_edit('add');
+}
+elsif ($action eq 'edit') {
+    add_edit('edit');
+}
+elsif ($action) {
+    eval "$action()";
+    list();
+}
+else {
+    list();
+}
+
+template('footer');
+
+sub list {
+    my $sth = $db->{dbh}->prepare(qq{
+        SELECT
+            id,
+            name,
+            emp_no,
+            department,
+            designation,
+            mobile,
+            email,
+            date_of_birth,
+            date_of_joining
+        FROM
+            employees
+        ORDER BY
+            name
+    });
+    $sth->execute;
+
+    my $param;
+    if ($sth->rows) {
+        $param->{hasemployees} = 1;
+
+        my $array_ref = $sth->fetchall_arrayref({});
+        $_->{department} = $conf->{departments}{$_->{department}} for @$array_ref;
+        $param->{employees} = $array_ref;
+
+        #while (my $hash_ref = $sth->fetchrow_hashref) {
+        #    push @{$param->{employees}}, $hash_ref;
+        #}
+    }
+
+    template('employees', $param);
+}
+
+sub add_edit {
+    my $action = shift;
+    my $param;
+    my %selected;
+
+    if (($action eq 'edit') && $id) {
+        $param = $db->{dbh}->selectrow_hashref(qq{
+            SELECT
+                *
+            FROM
+                employees
+            WHERE
+                id = ?
+        }, undef, $id);
+
+        $selected{department}{$param->{department}} = qq{ selected="selected"};
+        $param->{"$param->{grade}_grade_selected"} = qq{ selected="selected"};
+
+        $param->{button} = 'Update';
+        $param->{action} = 'update';
+    }
+    else {
+        $param->{button} = 'Next';
+        $param->{action} = 'insert';
+    }
+
+    for (sort {$a <=> $b} keys %{$conf->{departments}}) {
+        push @{$param->{departments}}, {department_value => $_, department_label => $conf->{departments}{$_}, department_selected => $selected{department}{$_}};
+    }
+
+    template('employee', $param);
+}
+
+sub insert {
+    my $params = $q->Vars;
+    my $data = {
+        name            => $params->{name},
+        emp_no          => $params->{emp_no},
+        department      => $params->{department},
+        designation     => $params->{designation},
+        grade           => $params->{grade},
+        address         => $params->{address},
+        phone           => $params->{phone},
+        mobile          => $params->{mobile},
+        email           => $params->{email},
+        date_of_birth   => $params->{date_of_birth},
+        date_of_joining => $params->{date_of_joining},
+    };
+
+    my $rows = $db->insert('employees', $data);
+
+    my ($emp_id) = $db->{dbh}->selectrow_array("SELECT LAST_INSERT_ID()");
+    return $emp_id;
+}
+
+sub update {
+    if ($id) {
+        my $params = $q->Vars;
+        my $data = {
+            name            => $params->{name},
+            emp_no          => $params->{emp_no},
+            department      => $params->{department},
+            designation     => $params->{designation},,
+            grade           => $params->{grade},
+            address         => $params->{address},
+            phone           => $params->{phone},
+            mobile          => $params->{mobile},
+            email           => $params->{email},
+            date_of_birth   => $params->{date_of_birth},
+            date_of_joining => $params->{date_of_joining},
+        };
+        my $cond = { id => $id };
+
+        my $rows = $db->update('employees', $data, $cond);
+    }
+}
+
+sub del {
+    if ($id) {
+        my $rows = $db->delete('employees', 'id', $id);
+        $rows = $db->delete('salary', 'emp_id', $id);
+    }
+}

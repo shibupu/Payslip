@@ -1,0 +1,13 @@
+tr {
+	height: 70px;
+}
+
+div {
+    float: left;
+}
+.full_width {
+    width: 100%;
+}
+.half_width {
+    width: 50%;
+}

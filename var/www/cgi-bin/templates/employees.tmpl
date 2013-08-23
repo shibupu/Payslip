@@ -1,0 +1,37 @@
+<table border="1" cellpadding="5" cellspacing="5" style="width: 100%;">
+    <tr>
+        <th>Name</th>
+        <!--<th>Emp No.</th>-->
+        <th>Department</th>
+        <th>Designation</th>
+        <th>Mobile No.</th>
+        <th>Email</th>
+        <th>Date of Birth</th>
+        <th>Date of Joining</th>
+        <th><a href="?action=add">Add Employee</a></th>
+    </tr>
+    <TMPL_IF hasemployees>
+    <TMPL_LOOP employees>
+    <tr>
+        <td><TMPL_VAR NAME=name></td>
+        <!--<td><TMPL_VAR NAME=emp_no></td>-->
+        <td><TMPL_VAR NAME=department></td>
+        <td><TMPL_VAR NAME=designation></td>
+        <td><TMPL_VAR NAME=mobile></td>
+        <td><TMPL_VAR NAME=email></td>
+        <td><TMPL_VAR NAME=date_of_birth></td>
+        <td><TMPL_VAR NAME=date_of_joining></td>
+        <td>
+            <a href="?action=edit&id=<TMPL_VAR NAME=id>">Edit</a>
+            <a href="?action=del&id=<TMPL_VAR NAME=id>" onclick="return confirm('Are you sure you want to delete this employee?');">Delete</a>
+            <a href="salary?id=<TMPL_VAR NAME=id>">Salary</a>
+            <a href="payments?id=<TMPL_VAR NAME=id>">Payments</a>
+        </td>
+    </tr>
+    </TMPL_LOOP>
+    <TMPL_ELSE>
+        <tr>
+            <td colspan="8" align="center">No employees found</td>
+        </tr>
+    </TMPL_IF>
+</table>

@@ -1,0 +1,4 @@
+AuthUserFile /var/www/cgi-bin/.htpasswd
+AuthType Basic
+AuthName "Organization Name"
+Require valid-user

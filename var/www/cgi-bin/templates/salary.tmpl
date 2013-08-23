@@ -1,0 +1,84 @@
+<script type="text/javascript" src="/js/salary.js"></script>
+
+<form name="salary" action="" method="post">
+    <table>
+        <tr><td colspan="2"><b>Earnings</b></td></tr>
+        <tr>
+            <td>Basic</td>
+            <td><input type="text" name="basic" id="basic" value="<TMPL_VAR NAME=basic>" title="Basic" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>HRA</td>
+            <td><input type="text" name="hra" id="hra" value="<TMPL_VAR NAME=hra>" title="HRA" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Gratuity</td>
+            <td><input type="text" name="gratuity" id="gratuity" value="<TMPL_VAR NAME=gratuity>" title="Gratuity" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Bonus</td>
+            <td><input type="text" name="bonus" id="bonus" value="<TMPL_VAR NAME=bonus>" title="Bonus" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Retention Bonus</td>
+            <td><input type="text" name="retention_bonus" id="retention_bonus" value="<TMPL_VAR NAME=retention_bonus>" title="Retention Bonus" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Dearness Allowance</td>
+            <td><input type="text" name="dearness_allowance" id="dearness_allowance" value="<TMPL_VAR NAME=dearness_allowance>" title="Dearness Allowance" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Transport Allowance</td>
+            <td><input type="text" name="transport_allowance" id="transport_allowance" value="<TMPL_VAR NAME=transport_allowance>" title="Transport Allowance" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Leave Travel Allowance</td>
+            <td><input type="text" name="leave_travel_allowance" id="leave_travel_allowance" value="<TMPL_VAR NAME=leave_travel_allowance>" title="Leave Travel Allowance" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Special Allowance</td>
+            <td><input type="text" name="special_allowance" id="special_allowance" value="<TMPL_VAR NAME=special_allowance>" title="Special Allowance" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Other Allowance</td>
+            <td><input type="text" name="other_allowance" id="other_allowance" value="<TMPL_VAR NAME=other_allowance>" title="Other Allowance" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Food Coupons</td>
+            <td><input type="text" name="food_coupons" id="food_coupons" value="<TMPL_VAR NAME=food_coupons>" title="Food Coupons" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Medical Reimbursement</td>
+            <td><input type="text" name="medical_reimbursement" id="medical_reimbursement" value="<TMPL_VAR NAME=medical_reimbursement>" title="Medical Reimbursement" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Car Expense Reimbursement</td>
+            <td><input type="text" name="car_expense_reimbursement" id="car_expense_reimbursement" value="<TMPL_VAR NAME=car_expense_reimbursement>" title="Car Expense Reimbursement" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Tel Expense Reimbursement</td>
+            <td><input type="text" name="tel_expense_reimbursement" id="tel_expense_reimbursement" value="<TMPL_VAR NAME=tel_expense_reimbursement>" title="Tel Expense Reimbursement" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr><td colspan="2"><b>Deductions</b></td></tr>
+        <tr>
+            <td>PF</td>
+            <td><input type="text" name="pf" id="pf" value="<TMPL_VAR NAME=pf>" title="PF" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>TDS</td>
+            <td><input type="text" name="tds" id="tds" value="<TMPL_VAR NAME=tds>" title="TDS" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td>Professional Tax</td>
+            <td><input type="text" name="professional_tax" id="professional_tax" value="<TMPL_VAR NAME=professional_tax>" title="Professional Tax" onkeypress="return validate_amount(event);" /></td>
+        </tr>
+        <tr>
+            <td align="right"><input type="submit" value="Back" onclick="$('action').value='back';" /></td>
+            <td>
+                <input type="hidden" name="id" value="<TMPL_VAR NAME=id>" />
+                <input type="hidden" name="action" id="action" value="<TMPL_VAR NAME=action>" />
+                <input type="button" value="<TMPL_VAR NAME=button>" onclick="validate_form();" />
+            </td>
+        </tr>
+    <table>
+</form>

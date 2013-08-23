@@ -1,0 +1,374 @@
+#!/usr/bin/perl
+
+use lib "./lib";
+use strict;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use Conf;
+use Database;
+
+require "common.pl";
+
+my $q    = new CGI;
+my $db   = new Database;
+my $conf = new Conf;
+
+my $action = $q->param('action');
+my $id     = $q->param('id');
+
+my ($param, $month_name, $file_name);
+my ($basic, $hra, $gratuity, $bonus);
+my ($pf, $tds, $professional_tax, $loss_of_pay);
+my ($total_earnings, $total_deductions, $net_amount);
+
+my @months = @{$conf->{months}};
+
+if ($action && $id) {
+    $param = $db->{dbh}->selectrow_hashref(qq{
+        SELECT
+            a.id,
+            a.emp_id,
+            a.month,
+            a.year,
+            a.basic,
+            a.hra,
+            a.gratuity,
+            a.bonus,
+            a.pf,
+            a.tds,
+            a.professional_tax,
+            a.loss_of_pay,
+            b.name,
+            b.department,
+            b.designation,
+            b.email
+        FROM
+            payments AS a,
+            employees AS b
+        WHERE
+            a.id = ?
+        AND
+            a.emp_id = b.id
+    }, undef, $id);
+
+    $param->{department} = $conf->{departments}{$param->{department}};
+
+    $month_name = $months[$param->{month}];
+
+    $basic            = sprintf("%.2f", $param->{basic});
+    $hra              = sprintf("%.2f", $param->{hra});
+    $gratuity         = sprintf("%.2f", $param->{gratuity});
+    $bonus            = sprintf("%.2f", $param->{bonus});
+    $pf               = sprintf("%.2f", $param->{pf});
+    $tds              = sprintf("%.2f", $param->{tds});
+    $professional_tax = sprintf("%.2f", $param->{professional_tax});
+    $loss_of_pay      = sprintf("%.2f", $param->{loss_of_pay});
+
+    $total_earnings   = sprintf("%.2f", $basic + $hra + $gratuity + $bonus);
+    $total_deductions = sprintf("%.2f", $pf + $tds + $professional_tax + $loss_of_pay);
+    $net_amount       = sprintf("%.2f", $total_earnings - $total_deductions);
+
+    if ($action eq 'view') {
+        $param->{total_earnings}   = $total_earnings;
+        $param->{total_deductions} = $total_deductions;
+        $param->{net_amount}       = $net_amount;
+
+        view_payslip();
+    }
+    elsif ($action eq 'download' || $action eq 'send') {
+        $file_name  = "$param->{name}_$param->{year}_$month_name.pdf";
+        $file_name  =~ s/ /_/g;
+
+        create_payslip();
+
+        if (-e "./pdf/$file_name") {
+            if ($action eq 'download') {
+                print $q->header(-type => 'application/x-pdf', -attachment => $file_name);
+
+                open (DOWNLOAD, "<./pdf/$file_name") or die $!;
+                while (<DOWNLOAD>) {
+                    print;
+                }
+                close DOWNLOAD;
+            }
+            elsif ($action eq 'send') {
+                send_payslip();
+                print_message('Mail sent successfully.');
+            }
+
+            unlink "./pdf/$file_name";
+        }
+        else {
+            print_message('An error occured. Please try again later.');
+        }
+    }
+    else {
+        print_message('Invalid request.');
+    }
+}
+else {
+    print_message('Invalid request.');
+}
+
+sub view_payslip {
+    print $q->header;
+    template('header');
+    template('payslip', $param);
+    template('footer');
+}
+
+sub create_payslip {
+    my ($column_1_x, $column_2_x, $column_3_x, $column_4_x) = (75, 295, 305, 545);
+    my $row_start_y = 477;
+    my $row_height  = 40;
+    my $y;
+
+    use PDF::API2;
+    my $pdf = PDF::API2->new;
+    #$pdf->pageLabel(0);
+
+    my %font = (
+        Courier => {
+            Normal => $pdf->corefont('Courier',         -encoding => 'latin1'),
+            Bold   => $pdf->corefont('Courier-Bold',    -encoding => 'latin1'),
+            Italic => $pdf->corefont('Courier-Oblique', -encoding => 'latin1'),
+        },
+        Helvetica => {
+            Normal => $pdf->corefont('Helvetica',         -encoding => 'latin1'),
+            Bold   => $pdf->corefont('Helvetica-Bold',    -encoding => 'latin1'),
+            Italic => $pdf->corefont('Helvetica-Oblique', -encoding => 'latin1'),
+        },
+        Times => {
+            Normal => $pdf->corefont('Times',        -encoding => 'latin1'),
+            Bold   => $pdf->corefont('Times-Bold',   -encoding => 'latin1'),
+            Italic => $pdf->corefont('Times-Italic', -encoding => 'latin1'),
+        },
+    );
+
+    my $page = $pdf->page;
+    $page->mediabox(612, 792);
+
+    my $gfx = $page->gfx;
+
+    my $logo = $pdf->image_png("logo.png");
+    $gfx->image($logo, 150, 650, 1);
+
+    my $text = $page->text;
+    $text->fillcolor('black');
+
+    $text->font($font{Times}{Bold}, 12);
+
+    $text->translate(70, 600);
+    $text->text("Payslip for $month_name $param->{year}");
+
+    $text->translate(550, 600);
+    $text->text_right("Department: $param->{department}");
+
+    $text->translate(70, 570);
+    $text->text("Name: $param->{name}");
+
+    $text->translate(550, 570);
+    $text->text_right("Designation: $param->{designation}");
+
+    #$gfx->rect(100, 100, 600, 600);
+    my $box = $page->gfx;
+    $box->rectxy(70, 140, 550, 500);
+    #$blue_box->fillcolor('darkblue');
+    #$blue_box->fill;
+    $box->stroke;
+
+    my $line = $page->gfx;
+    $y = 460;
+
+    for (1 .. 8) {
+        $line->move(70, $y);
+        $line->line(550, $y);
+
+        $y -= $row_height;
+    }
+
+    $line->move(200, 500);
+    $line->line(200, 140);
+
+    $line->move(300, 500);
+    $line->line(300, 140);
+
+    $line->move(450, 500);
+    $line->line(450, 140);
+
+    $line->stroke;
+
+    $text->font($font{Times}{Bold}, 11);
+
+
+    # row 1 start
+    $y = $row_start_y;
+
+    $text->translate($column_1_x, $y);
+    $text->text('Earnings');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right('Amount');
+
+    $text->translate($column_3_x, $y);
+    $text->text('Deductions');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right('Amount');
+
+    # row 1 end
+
+
+    # row 9 start
+    $y = $row_start_y - ($row_height * 8);
+
+
+    $text->translate($column_1_x, $y);
+    $text->text('Net Amount');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($net_amount);
+
+    # row 8 end
+
+
+    $text->font($font{Times}{Normal}, 11);
+
+
+    # row 2 start
+    $y = $row_start_y - $row_height;
+
+    $text->translate($column_1_x, $y);
+    $text->text('Basic');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($basic);
+
+    $text->translate($column_3_x, $y);
+    $text->text('PF');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right($pf);
+
+    # row 2 end
+
+
+    # row 3 start
+    $y = $row_start_y - ($row_height * 2);
+
+
+    $text->translate($column_1_x, $y);
+    $text->text('HRA');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($hra);
+
+    $text->translate($column_3_x, $y);
+    $text->text('TDS');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right($tds);
+
+    # row 3 end
+
+
+    # row 4 start
+    $y = $row_start_y - ($row_height * 3);
+
+
+    $text->translate($column_1_x, $y);
+    $text->text('Gratuity');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($gratuity);
+
+    $text->translate($column_3_x, $y);
+    $text->text('Professional Tax');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right($professional_tax);
+
+    # row 4 end
+
+
+    # row 5 start
+    $y = $row_start_y - ($row_height * 4);
+
+
+    $text->translate($column_1_x, $y);
+    $text->text('Bonus');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($bonus);
+
+    $text->translate($column_3_x, $y);
+    $text->text('Loss Of Pay');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right($loss_of_pay);
+
+    # row 5 end
+
+
+    # row 7 start
+    $y = $row_start_y - ($row_height * 6);
+
+
+    $text->translate($column_1_x, $y);
+    $text->text('Total Earnings');
+
+    $text->translate($column_2_x, $y);
+    $text->text_right($total_earnings);
+
+    $text->translate($column_3_x, $y);
+    $text->text('Total Deductions');
+
+    $text->translate($column_4_x, $y);
+    $text->text_right($total_deductions);
+
+    # row 7 end
+
+
+    # Page number
+    $text->fillcolor('#696969');
+    $text->translate(306, 50);
+    $text->text_center('Page 1');
+
+
+    $pdf->saveas("./pdf/$file_name");
+    $pdf->end;
+}
+
+sub send_payslip {
+    use Email::Send::SMTP::Gmail;
+
+    my $mail = Email::Send::SMTP::Gmail->new(
+        -smtp  => 'gmail.com',
+        -login => 'accounts@organization.com',
+        -pass  => 'org123'
+    );
+
+    $mail->send(
+        -to          => $param->{email},
+        -subject     => 'Payslip',
+        -body        => "Payslip for $month_name $param->{year}",
+        -attachments => "./pdf/$file_name",
+    );
+
+    $mail->bye;
+}
+
+sub print_message {
+    my $message = shift;
+
+    print $q->header;
+    template('header');
+
+    print qq{
+        <h1>$message</h1>
+        <a href="payments?id=$param->{emp_id}">Back</a>
+    };
+
+    template('footer');
+}

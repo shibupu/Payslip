@@ -1,0 +1,43 @@
+<h4>Employee Name: <TMPL_VAR NAME=employee_name></h4>
+<table border="1" cellpadding="5" cellspacing="5" style="width: 100%;">
+    <tr>
+        <th>Month</th>
+        <th>Year</th>
+        <th>Basic</th>
+        <th>HRA</th>
+        <th>Gratuity</th>
+        <th>Bonus</th>
+        <th>PF</th>
+        <th>TDS</th>
+        <th>Professional Tax</th>
+        <th>Loss Of Pay</th>
+        <th><a href="?action=add&emp_id=<TMPL_VAR NAME=emp_id>">Add Payment</a></th>
+    </tr>
+    <TMPL_IF haspayments>
+    <TMPL_LOOP payments>
+    <tr>
+        <td><TMPL_VAR NAME=month></td>
+        <td><TMPL_VAR NAME=year></td>
+        <td><TMPL_VAR NAME=basic></td>
+        <td><TMPL_VAR NAME=hra></td>
+        <td><TMPL_VAR NAME=gratuity></td>
+        <td><TMPL_VAR NAME=bonus></td>
+        <td><TMPL_VAR NAME=pf></td>
+        <td><TMPL_VAR NAME=tds></td>
+        <td><TMPL_VAR NAME=professional_tax></td>
+        <td><TMPL_VAR NAME=loss_of_pay></td>
+        <td>
+            <a href="?action=edit&id=<TMPL_VAR NAME=id>">Edit</a>
+            <a href="payslip?id=<TMPL_VAR NAME=id>&action=view">View</a>
+            <a href="payslip?id=<TMPL_VAR NAME=id>&action=download">Download</a>
+            <a href="payslip?id=<TMPL_VAR NAME=id>&action=send">Send</a>
+        </td>
+    </tr>
+    </TMPL_LOOP>
+    <TMPL_ELSE>
+        <tr>
+            <td colspan="11" align="center">No payments found</td>
+        </tr>
+    </TMPL_IF>
+</table>
+<a href="employees">Back</a>

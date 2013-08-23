@@ -1,0 +1,221 @@
+#!/usr/bin/perl
+
+use lib "./lib";
+use strict;
+
+use CGI;
+use CGI::Carp qw(fatalsToBrowser);
+use Conf;
+use Database;
+
+require "common.pl";
+
+my $q    = new CGI;
+my $db   = new Database;
+my $conf = new Conf;
+
+my $action = $q->param('action');
+my $id     = $q->param('id');
+my $emp_id = $q->param('emp_id');
+my ($month, $year);
+
+my @months = @{$conf->{months}};
+
+print $q->header;
+
+template('header');
+
+if ($action eq 'add' && $emp_id) {
+    add_edit('add');
+}
+elsif ($action eq 'edit' && $id) {
+    add_edit('edit');
+}
+elsif ((($action eq 'insert' || $action eq 'back') && $emp_id) || ($action eq 'update' && $id)) {
+    if ($action eq 'insert' || $action eq 'update') {
+        eval "$action()";
+    }
+
+    $id = $emp_id;
+    list();
+}
+elsif ($id) {
+    list();
+}
+
+template('footer');
+
+sub list {
+    my $sth = $db->{dbh}->prepare(qq{
+        SELECT
+            id,
+            year,
+            month,
+            basic,
+            hra,
+            gratuity,
+            bonus,
+            pf,
+            tds,
+            professional_tax,
+            loss_of_pay
+        FROM
+            payments
+        WHERE
+            emp_id = ?
+        ORDER BY
+            year,
+            month
+    });
+    $sth->execute($id);
+
+    my $param;
+    $param->{emp_id}        = $id;
+    $param->{employee_name} = $db->{dbh}->selectrow_array(qq{
+        SELECT
+            name
+        FROM
+            employees
+        WHERE
+            id = ?
+    }, undef, $id);
+
+    if ($sth->rows) {
+        $param->{haspayments} = 1;
+
+        my $array_ref = $sth->fetchall_arrayref({});
+        $_->{month} = $conf->{months}[$_->{month}] for @$array_ref;
+        $param->{payments} = $array_ref;
+    }
+
+    template('payments', $param);
+}
+
+sub add_edit {
+    my $action = shift;
+    my $param;
+
+    if ($action eq 'add') {
+        ($month, $year) = (localtime)[4, 5];
+        $year += 1900;
+        $month++;
+
+        my ($already_paid) = $db->{dbh}->selectrow_array(qq{
+            SELECT
+                COUNT(*)
+            FROM
+                payments
+            WHERE
+                emp_id = ?
+            AND
+                year = ?
+            AND
+                month = ?
+        }, undef, $emp_id, $year, $month);
+
+        if ($already_paid) {
+            $param->{already_paid} = 1;
+        }
+        else {
+            $param = $db->{dbh}->selectrow_hashref(qq{
+                SELECT
+                    *
+                FROM
+                    salary
+                WHERE
+                    emp_id = ?
+            }, undef, $emp_id);
+
+            $param->{year}       = $year;
+            $param->{month}      = $month;
+            $param->{month_name} = $months[$month];
+            $param->{button}     = 'Add';
+            $param->{action}     = 'insert';
+        }
+
+        $param->{emp_id} = $emp_id;
+    }
+    elsif ($action eq 'edit') {
+        $param = $db->{dbh}->selectrow_hashref(qq{
+            SELECT
+                *
+            FROM
+                payments
+            WHERE
+                id = ?
+        }, undef, $id);
+
+        $emp_id = $param->{emp_id};
+
+        $param->{month_name} = $months[$param->{'month'}];
+        $param->{button}     = 'Update';
+        $param->{action}     = 'update';
+    }
+
+    $param->{employee_name} = $db->{dbh}->selectrow_array(qq{
+        SELECT
+            name
+        FROM
+            employees
+        WHERE
+            id = ?
+    }, undef, $emp_id);
+
+    template('payment', $param);
+}
+
+sub insert {
+    my $params = $q->Vars;
+    my $data = {
+        emp_id                    => $emp_id,
+        year                      => $params->{year},
+        month                     => $params->{month},
+        basic                     => $params->{basic},
+        hra                       => $params->{hra},
+        gratuity                  => $params->{gratuity},
+        bonus                     => $params->{bonus},
+        retention_bonus           => $params->{retention_bonus},
+        dearness_allowance        => $params->{dearness_allowance},
+        transport_allowance       => $params->{transport_allowance},
+        leave_travel_allowance    => $params->{leave_travel_allowance},
+        special_allowance         => $params->{special_allowance},
+        other_allowance           => $params->{other_allowance},
+        food_coupons              => $params->{food_coupons},
+        medical_reimbursement     => $params->{medical_reimbursement},
+        car_expense_reimbursement => $params->{car_expense_reimbursement},
+        tel_expense_reimbursement => $params->{tel_expense_reimbursement},
+        pf                        => $params->{pf},
+        tds                       => $params->{tds},
+        professional_tax          => $params->{professional_tax},
+        loss_of_pay               => $params->{loss_of_pay},
+    };
+
+    my $rows = $db->insert('payments', $data);
+}
+
+sub update {
+    my $params = $q->Vars;
+    my $data = {
+        basic                     => $params->{basic},
+        hra                       => $params->{hra},
+        gratuity                  => $params->{gratuity},
+        bonus                     => $params->{bonus},
+        retention_bonus           => $params->{retention_bonus},
+        dearness_allowance        => $params->{dearness_allowance},
+        transport_allowance       => $params->{transport_allowance},
+        leave_travel_allowance    => $params->{leave_travel_allowance},
+        special_allowance         => $params->{special_allowance},
+        other_allowance           => $params->{other_allowance},
+        food_coupons              => $params->{food_coupons},
+        medical_reimbursement     => $params->{medical_reimbursement},
+        car_expense_reimbursement => $params->{car_expense_reimbursement},
+        tel_expense_reimbursement => $params->{tel_expense_reimbursement},
+        pf                        => $params->{pf},
+        tds                       => $params->{tds},
+        professional_tax          => $params->{professional_tax},
+        loss_of_pay               => $params->{loss_of_pay},
+    };
+    my $cond = { id => $id };
+
+    my $rows = $db->update('payments', $data, $cond);
+}

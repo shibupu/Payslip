@@ -1,0 +1,76 @@
+<link rel="stylesheet" type="text/css" href="/css/payslip.css" />
+<script type="text/javascript" src="/js/payslip.js"></script>
+
+<div style="width: 80%; margin-left: 10%;">
+    <div class="full_width" style="text-align: center;">
+        <img src="/images/logo.png" />
+    </div>
+    <div class="full_width" style="font-weight: bold;">
+        <div class="full_width" style="height: 70px;">
+            <div class="half_width">Payslip for <TMPL_VAR NAME=month_name> <TMPL_VAR NAME=year></div>
+            <div class="half_width" style="text-align: right;">Name: <TMPL_VAR NAME=name></div>
+        </div>
+        <div class="full_width" style="height: 70px;">
+            <div class="half_width">Department: <TMPL_VAR NAME=department></div>
+            <div class="half_width" style="text-align: right;">Designation: <TMPL_VAR NAME=designation></div>
+        </div>
+    </div>
+    <table border="2" cellpadding="5" class="full_width">
+        <tr style="font-weight: bold;">
+            <td>Earnings</td>
+            <td align="right">Amount</td>
+            <td>Deductions</td>
+            <td align="right">Amount</td>
+        </tr>
+        <tr>
+            <td>Basic</td>
+            <td align="right"><TMPL_VAR NAME=basic></td>
+            <td>PF</td>
+            <td align="right"><TMPL_VAR NAME=pf></td>
+        </tr>
+        <tr>
+            <td>HRA</td>
+            <td align="right"><TMPL_VAR NAME=hra></td>
+            <td>TDS</td>
+            <td align="right"><TMPL_VAR NAME=tds></td>
+        </tr>
+        <tr>
+            <td>Gratuity</td>
+            <td align="right"><TMPL_VAR NAME=gratuity></td>
+            <td>Professional Tax</td>
+            <td align="right"><TMPL_VAR NAME=professional_tax></td>
+        </tr>
+        <tr>
+            <td>Bonus</td>
+            <td align="right"><TMPL_VAR NAME=bonus></td>
+            <td>Loss Of Pay</td>
+            <td align="right"><TMPL_VAR NAME=loss_of_pay></td>
+        </tr>
+        <tr>
+            <td colspan="4"></td>
+        </tr>
+        <tr>
+            <td>Total Earnings</td>
+            <td align="right"><TMPL_VAR NAME=total_earnings></td>
+            <td>Total Deductions</td>
+            <td align="right"><TMPL_VAR NAME=total_deductions></td>
+        </tr>
+        <tr>
+            <td colspan="4"></td>
+        </tr>
+        <tr>
+            <td style="font-weight: bold;">Net Amount</td>
+            <td align="right" style="font-weight: bold;"><TMPL_VAR NAME=net_amount></td>
+            <td colspan="2"></td>
+        </tr>
+    <table>
+    <div class="full_width" style="margin: 20px 0 20px 0; text-align: center;">
+        <form name="payslip" action="" method="post">
+            <a href="payments?id=<TMPL_VAR NAME=emp_id>">Back</a>
+            <input type="hidden" name="id" value="<TMPL_VAR NAME=id>" />
+            <input type="hidden" name="action" id="action" value="send" />
+            <input type="button" value="Download" onclick="submit_form('download');" />
+            <input type="button" value="Send" onclick="submit_form('send');" />
+        </form>
+    </div>
+</div>

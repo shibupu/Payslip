@@ -1,0 +1,80 @@
+<link rel="stylesheet" type="text/css" href="/css/dhtmlgoodies_calendar.css" />
+
+<script type="text/javascript" src="/js/dhtmlgoodies_calendar.js"></script>
+<script type="text/javascript" src="/js/employees.js"></script>
+
+<form name="employees" action="" method="post">
+    <table>
+        <tr>
+            <td>Name</td>
+            <td><input type="text" name="name" id="name" value="<TMPL_VAR NAME=name>" title="Name" /></td>
+        </tr>
+        <tr>
+            <td>Emp No.</td>
+            <td><input type="text" name="emp_no" id="emp_no" value="<TMPL_VAR NAME=emp_no>" title="Emp No." /></td>
+        </tr>
+        <tr>
+            <td>Department</td>
+            <td>
+                <select name="department" id="department" title="Department">
+<TMPL_LOOP departments>
+                    <option value="<TMPL_VAR NAME=department_value>"<TMPL_VAR NAME=department_selected>><TMPL_VAR NAME=department_label></option>
+</TMPL_LOOP>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Designation</td>
+            <td><input type="text" name="designation" id="designation" value="<TMPL_VAR NAME=designation>" title="Designation" /></td>
+        </tr>
+        <tr>
+            <td>Grade</td>
+            <td>
+                <select name="grade" id="grade" title="Grade">
+                    <option value="A"<TMPL_VAR NAME=A_grade_selected>>A</option>
+                    <option value="B"<TMPL_VAR NAME=B_grade_selected>>B</option>
+                    <option value="C"<TMPL_VAR NAME=C_grade_selected>>C</option>
+                    <option value="D"<TMPL_VAR NAME=D_grade_selected>>D</option>
+                </select>
+            </td>
+        </tr>
+        <tr>
+            <td>Address</td>
+            <td><textarea name="address" id="address" title="Address"><TMPL_VAR NAME=address></textarea></td>
+        </tr>
+        <tr>
+            <td>Phone No.</td>
+            <td><input type="text" name="phone" id="phone" value="<TMPL_VAR NAME=phone>" title="Phone No." onkeypress="return validate_number(event);" /></td>
+        </tr>
+        <tr>
+            <td>Mobile No.</td>
+            <td><input type="text" name="mobile" id="mobile" value="<TMPL_VAR NAME=mobile>" title="Mobile No." onkeypress="return validate_number(event);" /></td>
+        </tr>
+        <tr>
+            <td>Email</td>
+            <td><input type="text" name="email" id="email" value="<TMPL_VAR NAME=email>" title="Email" /></td>
+        </tr>
+        <tr>
+            <td>Date of Birth</td>
+            <td>
+                <input type="text" name="date_of_birth" id="date_of_birth" value="<TMPL_VAR NAME=date_of_birth>" title="Date of Birth" readonly="readonly" />
+                <img src="/images/calander.gif" style="cursor:pointer;" onclick="displayCalendar($('date_of_birth'), 'yyyy-mm-dd', this); return false;" />
+            </td>
+        </tr>
+        <tr>
+            <td>Date of Joining</td>
+            <td>
+                <input type="text" name="date_of_joining" id="date_of_joining" value="<TMPL_VAR NAME=date_of_joining>" title="Date of Joining" readonly="readonly" />
+                <img src="/images/calander.gif" style="cursor:pointer;" onclick="displayCalendar($('date_of_joining'), 'yyyy-mm-dd', this); return false;" />
+            </td>
+        </tr>
+        <tr>
+            <td align="right"><input type="submit" value="Back" onclick="$('action').value='';" /></td>
+            <td>
+                <input type="hidden" name="id" value="<TMPL_VAR NAME=id>" />
+                <input type="hidden" name="action" id="action" value="<TMPL_VAR NAME=action>" />
+                <input type="button" value="<TMPL_VAR NAME=button>" onclick="validate_form();" />
+            </td>
+        </tr>
+    </table>
+</form>
